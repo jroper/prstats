@@ -1,0 +1,38 @@
+@(message: Option[String])
+
+@main("Pull Request Stats") {
+
+    <h1>Pull Request stats</h1>
+
+    @for(msg <- message) {
+        <div>Currently logged in as: @msg</div>
+    }
+
+    <div>GitHub username:</div>
+    <div>
+        <input id="username" type="text"/>
+    </div>
+
+    <div>GitHub password:</div>
+    <div>
+        <input id="password" type="password"/>
+    </div>
+
+    <div>GitHub repository:</div>
+    <div>
+        <input id="repo" type="text" placeholder="account/repo"/>
+    </div>
+
+    <div>Exclude organisations (comma separated):</div>
+    <div>
+        <input id="exclude" type="text"/>
+    </div>
+
+    <div>
+        <button value="Get PR stats" id="getprstats">Get stats</button>
+    </div>
+
+    <div id="results">
+
+    </div>
+}
