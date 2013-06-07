@@ -7,7 +7,7 @@ import play.api.libs.ws.WS
 import com.ning.http.client.Realm.AuthScheme
 import scala.concurrent.Future
 import play.api.libs.Comet
-import play.api.libs.json.JsArray
+import play.api.libs.json.{Json, JsArray}
 
 object Application extends Controller {
 
@@ -50,8 +50,8 @@ object Application extends Controller {
         console("Looking up members of organisation " + org)
         authWS("https://api.github.com/orgs/" + org + "/members").get()
       })
-      openPullRequests <- getPullRequests("https://api.github.com/repos/" + repo + "/pulls?state=open", "open", console)
-      closedPullRequests <- getPullRequests("https://api.github.com/repos/" + repo + "/pulls?state=closed", "closed", console)
+      openPullRequests <- getPullRequests("https://api.github.com/repos/" + repo + "/pulls?state=open&per_page=100", "open", console)
+      closedPullRequests <- getPullRequests("https://api.github.com/repos/" + repo + "/pulls?state=closed&per_page=100", "closed", console)
     } yield {
 
       val pullRequests = openPullRequests ::: closedPullRequests
@@ -59,12 +59,18 @@ object Application extends Controller {
       val excludedUsers = responses.flatMap(r => (r.json \\ "login").map(_.as[String])).toSet
       console("Retrieved " + excludedUsers.size + " members of excluded organisations")
 
+      // Add the excludes to the excluded users
+      val allExcludes = excludedUsers ++ excludes
+
       console("Retrieved " + pullRequests.size + " pull requests in total")
-      val filtered = pullRequests.filterNot(excludedUsers.contains)
+      val filtered = pullRequests.filterNot(allExcludes.contains)
       console(filtered.size + " pull requests from the community")
       val individuals = filtered.groupBy(identity).toSeq
       console(individuals.size + " unique community contributors")
       console(individuals.filter(_._2.size >= 5).size + " community contributors have contributed 5 or more pull requests")
+
+      console("Individuals are:")
+      individuals.map(_._1).foreach(console)
 
       done()
     }
